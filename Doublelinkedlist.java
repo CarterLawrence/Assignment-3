@@ -1,11 +1,13 @@
 package problem1;
 
-public class Singlelinkedlist<E> {
-	private Node start;
-	public int currentCount;
-	public Singlelinkedlist()
+
+public class Doublelinkedlist<E> {
+	private Node start, end;
+	private int currentCount;
+	public Doublelinkedlist()
 	{
 		start = null;
+		end = null;
 		currentCount = 0;
 	}
 	public void printList()
@@ -17,7 +19,16 @@ public class Singlelinkedlist<E> {
 			current = current.next;
 		}
 	}
-	public void add(E val)//O(N)
+	public void printListRev()
+	{
+		Node current = end;
+		while(current != null)
+		{
+			System.out.println(current.value);
+			current = current.prev;
+		}
+	}
+	public void add(E val)//O(1)
 	{
 		Node newItem = new Node(val);
 
@@ -25,18 +36,15 @@ public class Singlelinkedlist<E> {
 		if(start == null)
 		{
 			start = newItem;
+			end = start;//only item in list means end = start
 			currentCount++;
 		}
 		//if list has items
 		else
 		{
-			Node current = start;//start at first item in list
-			while(current.next != null)//move through list to last item
-			{
-				current = current.next;
-			}
-			//when while ends, current = last item in list
-			current.next = newItem;
+			end.next = newItem;//end -> newItem
+			newItem.prev = end;//end <- newItem
+			end = newItem;
 			currentCount++;
 		}
 	}
@@ -56,6 +64,7 @@ public class Singlelinkedlist<E> {
 			if(index == 0)//special case, changing start variable
 			{
 				newItem.next = start;//current list comes after new item
+				start.prev = newItem;
 				start = newItem;//new item is first in list
 			}
 			else
@@ -68,13 +77,15 @@ public class Singlelinkedlist<E> {
 				//System.out.println(current.value);
 
 				//current == before at this point
-				//before -> index -> after
-				//1 -> 2 -> 3
+				//current/before <-> index <-> after
+				//1 <-> 2 <-> 3
 				//goal
-				//before -> new -> index -> after
-				//1 -> new -> 2 -> 3
+				//before <-> new <-> index <-> after
+				//1 <-> new <-> 2 <-> 3
 				newItem.next = current.next;//new -> index
+				current.next.prev = newItem;//new <- index
 				current.next = newItem;//before -> new
+				newItem.prev = current;//before <- new
 			}
 			currentCount++;
 		}
@@ -86,6 +97,26 @@ public class Singlelinkedlist<E> {
 			if(index==0)//deal with special case
 			{
 				start = start.next;
+				if(start != null)//in case list just became empty
+				{
+					start.prev = null;
+				}
+				else
+				{
+					end = null;
+				}
+			}
+			else if(index == currentCount -1)
+			{
+				end = end.prev;
+				if(end != null)
+				{
+					end.next = null;
+				}
+				else
+				{
+					start = null;
+				}
 			}
 			else
 			{
@@ -95,8 +126,13 @@ public class Singlelinkedlist<E> {
 					current = current.next;
 				}
 				current.next = current.next.next;
-				//current -> deleteMe -> restoflist
+				//current <-> deleteMe <-> restoflist
 				//current -> restoflist
+				//current <- deleteMe <- restoflist
+				if(current.next != null)//incase we deleted the last item
+				{
+					current.next.prev = current;//current <- restoflist
+				}
 			}
 			currentCount--;
 		}
@@ -105,27 +141,36 @@ public class Singlelinkedlist<E> {
 		 if (index == 0){
 			 Node temp = start.next;
 		     start.next = start.next.next;
+		     start.prev = temp;
+		     start.next.prev = start;
 		     temp.next = start;
+		     temp.prev = null;
 		     start = temp;
 		}else{
 			 Node temp = start;
-			 
 			 
 			 for(int i = 0; i < index-1; i++){//goes to node prior to index
 		     temp = temp.next;
 			 }
 			 
+			 Node a = temp;
 			 Node n = temp.next.next;//node that comes after index
-			 Node t = n.next;//node that comes after Node n
+			 Node t = temp.next.next.next;//node that comes after Node n
+			 temp = temp.next;
 			 
-			 temp.next.next = temp.next;
-			 n.next = temp.next.next;
-			 temp.next.next.next = t;
-			 temp.next = n;
+			 t.prev = temp;
+			 n.prev = a;
+			 temp.prev = n;
+			 
+			 a.next = n;
+			 a.next.next = temp;
+			 temp.next = t;
 			 
 		}
 	}
-	public E get(int index)//O(N)
+
+
+	public E get(int index)//O(N)//could be improved to O(N/2) by starting from start/end depending on index
 	{
 		if(index >= 0 && index < currentCount)
 		{
@@ -146,11 +191,12 @@ public class Singlelinkedlist<E> {
 	private class Node
 	{
 		E value;
-		Node next;
+		Node next, prev;
 		public Node(E v)
 		{
 			value = v;
 			next = null;//no node after this one
+			prev = null;
 		}
 	}
 }
